@@ -36,7 +36,6 @@ const Home = () => {
           <div className="floating-card card-3">Экскурсии</div>
         </div>
       </section>
-
       <section className="features-section">
         <div className="container">
           <h2 className="section-title">Почему выбирают нас</h2>

@@ -24,7 +24,6 @@ const Navigation = () => {
             Мир Путешествий
           </NavLink>
         </div>
-        
         <div className="nav-links">
           <NavLink to="/" end className="nav-link">
             <span className="link-icon">🏠</span>
@@ -34,7 +33,6 @@ const Navigation = () => {
             <span className="link-icon">🌍</span>
             Туры
           </NavLink>
-          
           {/* Ссылка на Dashboard для авторизованных пользователей */}
           {isAuthenticated && (
             <NavLink to="/dashboard" className="nav-link">
@@ -42,7 +40,13 @@ const Navigation = () => {
               Личный кабинет
             </NavLink>
           )}
-          
+          {/* Ссылка на Админку для администраторов */}
+          {isAuthenticated && user && (user.role === 'admin' || user.role_name === 'admin') && (
+            <NavLink to="/admin" className="nav-link admin-link">
+              <span className="link-icon">🛠️</span>
+              Админка
+            </NavLink>
+          )}
           <NavLink to="/cart" className="nav-link cart-link">
             <span className="link-icon">🛒</span>
             Корзина
@@ -50,7 +54,6 @@ const Navigation = () => {
               <span className="cart-badge">{getTotalItems()}</span>
             )}
           </NavLink>
-          
           {isAuthenticated ? (
             <div className="user-menu">
               <span className="user-greeting">Привет, {user.name}!</span>
@@ -71,7 +74,6 @@ const Navigation = () => {
             </>
           )}
         </div>
-
         <ThemeToggle />
       </div>
     </nav>

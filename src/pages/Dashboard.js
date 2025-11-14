@@ -1,13 +1,40 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
+import { useServices } from '../contexts/ServicesContext';
 import ProtectedRoute from '../common/ProtectedRoute';
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { getTotalItems } = useCart();
+  const { getTotalItems, items } = useCart();
+  const { services } = useServices();
   const navigate = useNavigate();
+  const [userBookings, setUserBookings] = useState([]);
+
+  // Загрузка бронирований пользователя
+  const fetchUserBookings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/bookings/user/${user.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      if (data.success) {
+        setUserBookings(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchUserBookings();
+    }
+  }, [user, services]);
 
   const quickActions = [
     {
@@ -25,39 +52,41 @@ const Dashboard = () => {
       color: '#10b981'
     },
     {
+      icon: '📋',
+      title: 'Мои бронирования',
+      description: `Активных бронирований: ${userBookings.length}`,
+      action: () => navigate('/bookings'),
+      color: '#f59e0b'
+    },
+    {
       icon: '⭐',
       title: 'Избранное',
       description: 'Сохраненные туры',
       action: () => alert('Раздел в разработке'),
-      color: '#f59e0b'
-    },
-    {
-      icon: '📞',
-      title: 'Поддержка',
-      description: 'Помощь и консультации',
-      action: () => alert('Свяжитесь с нами: +7 (999) 123-45-67'),
       color: '#8b5cf6'
     }
   ];
 
-  const recentTours = [
-    {
-      name: "Тур в Турцию",
-      price: 45000,
-      image: "/images/turkey.jpg",
-      viewed: "2 часа назад"
+  const features = [
+    { 
+      icon: '🚀', 
+      title: 'Быстрое бронирование', 
+      desc: 'Забронируйте тур за 2 минуты' 
     },
-    {
-      name: "Отдых в Египте", 
-      price: 52000,
-      image: "/images/egypt.webp",
-      viewed: "Вчера"
+    { 
+      icon: '🛡️', 
+      title: 'Гарантия лучшей цены', 
+      desc: 'Нашли дешевле? Вернем разницу!' 
     },
-    {
-      name: "Экскурсия по Европе",
-      price: 78000,
-      image: "/images/europe.jpg",
-      viewed: "3 дня назад"
+    { 
+      icon: '📞', 
+      title: 'Поддержка 24/7', 
+      desc: 'Помощь в любое время суток' 
+    },
+    { 
+      icon: '✈️', 
+      title: 'Выгодные предложения', 
+      desc: 'Скидки до 40% на раннее бронирование' 
     }
   ];
 
@@ -69,23 +98,22 @@ const Dashboard = () => {
           <div className="welcome-content">
             <h1>Добро пожаловать, {user?.name}! 👋</h1>
             <p>Готовы к новым приключениям? Исследуйте лучшие туры со скидками до 30%</p>
-          </div>
-          <div className="welcome-stats">
-            <div className="stat-card">
-              <span className="stat-icon">🎯</span>
-              <div className="stat-info">
-                <span className="stat-number">18</span>
+            <div className="user-stats">
+              <div className="user-stat">
+                <span className="stat-number">{userBookings.length}</span>
+                <span className="stat-label">Бронирований</span>
+              </div>
+              <div className="user-stat">
+                <span className="stat-number">{getTotalItems()}</span>
+                <span className="stat-label">В корзине</span>
+              </div>
+              <div className="user-stat">
+                <span className="stat-number">{services.length}</span>
                 <span className="stat-label">Доступных туров</span>
               </div>
             </div>
-            <div className="stat-card">
-              <span className="stat-icon">⭐</span>
-              <div className="stat-info">
-                <span className="stat-number">4.8</span>
-                <span className="stat-label">Рейтинг сервиса</span>
-              </div>
-            </div>
           </div>
+          {/* Удален блок welcome-visual с плавающими элементами */}
         </div>
 
         {/* Быстрые действия */}
@@ -110,31 +138,48 @@ const Dashboard = () => {
           </div>
         </section>
 
-        {/* Недавно просмотренные */}
+        {/* Активные бронирования */}
+        {userBookings.length > 0 && (
+          <section className="dashboard-section">
+            <div className="section-header">
+              <h2>Активные бронирования</h2>
+              <button className="see-all" onClick={() => navigate('/bookings')}>
+                Все бронирования →
+              </button>
+            </div>
+            <div className="bookings-grid">
+              {userBookings.slice(0, 3).map(booking => (
+                <div key={booking.id} className="booking-card">
+                  <div className="booking-header">
+                    <h4>{booking.tour_name}</h4>
+                    <span className={`booking-status ${booking.status}`}>
+                      {booking.status === 'confirmed' ? '✅ Подтверждено' : 
+                      booking.status === 'pending' ? '⏳ Ожидание' : 
+                      booking.status === 'cancelled' ? '❌ Отменено' : '✅ Завершено'}
+                    </span>
+                  </div>
+                  <div className="booking-details">
+                    <div className="booking-info">
+                      <span>📅 Дата: {new Date(booking.created_at).toLocaleDateString('ru-RU')}</span>
+                      <span>👥 Участники: {booking.participants}</span>
+                      <span>💰 Сумма: {booking.total_price?.toLocaleString('ru-RU')} ₽</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Преимущества */}
         <section className="dashboard-section">
-          <div className="section-header">
-            <h2>Недавно просмотренные</h2>
-            <button className="see-all" onClick={() => navigate('/products')}>
-              Смотреть все →
-            </button>
-          </div>
-          <div className="recent-tours">
-            {recentTours.map((tour, index) => (
-              <div key={index} className="recent-tour-card">
-                <div className="tour-image">
-                  <img src={tour.image} alt={tour.name} />
-                </div>
-                <div className="tour-info">
-                  <h4>{tour.name}</h4>
-                  <p className="tour-price">{tour.price.toLocaleString()} ₽</p>
-                  <span className="viewed-time">{tour.viewed}</span>
-                </div>
-                <button 
-                  className="view-again"
-                  onClick={() => navigate('/products')}
-                >
-                  Посмотреть
-                </button>
+          <h2>Почему выбирают нас</h2>
+          <div className="features-grid">
+            {features.map((feature, index) => (
+              <div key={index} className="feature-card">
+                <div className="feature-icon">{feature.icon}</div>
+                <h3>{feature.title}</h3>
+                <p>{feature.desc}</p>
               </div>
             ))}
           </div>
@@ -142,11 +187,11 @@ const Dashboard = () => {
 
         {/* Спецпредложения */}
         <section className="dashboard-section">
-          <h2>Специальные предложения</h2>
           <div className="promo-banner">
             <div className="promo-content">
               <h3>🎉 Скидка 20% на первый заказ!</h3>
               <p>Введите промокод WELCOME20 при оформлении</p>
+              <small>Действует для новых пользователей</small>
             </div>
             <button 
               className="promo-button"

@@ -44,7 +44,6 @@ const Cart = () => {
         <h1>Корзина</h1>
         <span className="cart-count">{items.length} {items.length === 1 ? 'тур' : 'тура'}</span>
       </div>
-      
       <div className="cart-content">
         <div className="cart-items">
           {items.map(item => (
@@ -72,7 +71,6 @@ const Cart = () => {
             </div>
           ))}
         </div>
-        
         <div className="cart-summary">
           <div className="summary-card">
             <h3>Итог заказа</h3>
@@ -95,7 +93,6 @@ const Cart = () => {
           </div>
         </div>
       </div>
-      
       <div className="cart-actions">
         <button onClick={handleContinueShopping} className="continue-shopping">
           ← Продолжить покупки

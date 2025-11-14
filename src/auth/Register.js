@@ -31,7 +31,6 @@ const Register = () => {
     const result = await register(formData.email, formData.password, formData.name);
     
     if (result.success) {
-      // Редирект на dashboard после регистрации
       navigate('/dashboard', { replace: true });
     } else {
       setError(result.error);

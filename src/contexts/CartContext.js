@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 
-
 const CART_ACTIONS = {
   ADD_PRODUCT: 'ADD_PRODUCT',
   DELETE_PRODUCT: 'DELETE_PRODUCT',
@@ -12,19 +11,16 @@ const CART_ACTIONS = {
   UNSELECT_ALL_ITEMS: 'UNSELECT_ALL_ITEMS'
 };
 
-
 const initialCartState = {
   products: [],
   selectedItems: [],
   lastUpdated: null
 };
 
-
 const shoppingCartReducer = (state, action) => {
   switch (action.type) {
     case CART_ACTIONS.ADD_PRODUCT:
       const existingProduct = state.products.find(product => product.id === action.product.id);
-      
       if (existingProduct) {
         return {
           ...state,
@@ -36,13 +32,11 @@ const shoppingCartReducer = (state, action) => {
           lastUpdated: new Date().toISOString()
         };
       }
-      
       return {
         ...state,
         products: [...state.products, { ...action.product, quantity: 1 }],
         lastUpdated: new Date().toISOString()
       };
-
     case CART_ACTIONS.DELETE_PRODUCT:
       return {
         ...state,
@@ -50,10 +44,8 @@ const shoppingCartReducer = (state, action) => {
         selectedItems: state.selectedItems.filter(id => id !== action.productId),
         lastUpdated: new Date().toISOString()
       };
-
     case CART_ACTIONS.CHANGE_QUANTITY:
       const { productId, quantity } = action;
-      
       if (quantity <= 0) {
         return {
           ...state,
@@ -62,7 +54,6 @@ const shoppingCartReducer = (state, action) => {
           lastUpdated: new Date().toISOString()
         };
       }
-      
       return {
         ...state,
         products: state.products.map(product =>
@@ -70,20 +61,17 @@ const shoppingCartReducer = (state, action) => {
         ),
         lastUpdated: new Date().toISOString()
       };
-
     case CART_ACTIONS.EMPTY_CART:
       return {
         ...initialCartState,
         lastUpdated: new Date().toISOString()
       };
-
     case CART_ACTIONS.SYNC_CART:
       return {
         ...state,
         products: action.products || [],
         lastUpdated: new Date().toISOString()
       };
-
     case CART_ACTIONS.TOGGLE_ITEM_SELECTION:
       const isSelected = state.selectedItems.includes(action.productId);
       return {
@@ -92,31 +80,25 @@ const shoppingCartReducer = (state, action) => {
           ? state.selectedItems.filter(id => id !== action.productId)
           : [...state.selectedItems, action.productId]
       };
-
     case CART_ACTIONS.SELECT_ALL_ITEMS:
       return {
         ...state,
         selectedItems: state.products.map(product => product.id)
       };
-
     case CART_ACTIONS.UNSELECT_ALL_ITEMS:
       return {
         ...state,
         selectedItems: []
       };
-
     default:
       return state;
   }
 };
 
-
 const ShoppingCartContext = createContext();
-
 
 export const ShoppingCartProvider = ({ children }) => {
   const [cartState, dispatch] = useReducer(shoppingCartReducer, initialCartState);
-
 
   useEffect(() => {
     try {
@@ -130,7 +112,6 @@ export const ShoppingCartProvider = ({ children }) => {
     }
   }, []);
 
- 
   useEffect(() => {
     try {
       localStorage.setItem('shoppingCart', JSON.stringify(cartState));
@@ -139,52 +120,41 @@ export const ShoppingCartProvider = ({ children }) => {
     }
   }, [cartState]);
 
-
   const addProduct = useCallback((product) => {
     dispatch({ type: CART_ACTIONS.ADD_PRODUCT, product });
   }, []);
-
 
   const deleteProduct = useCallback((productId) => {
     dispatch({ type: CART_ACTIONS.DELETE_PRODUCT, productId });
   }, []);
 
-
   const changeProductQuantity = useCallback((productId, quantity) => {
     dispatch({ type: CART_ACTIONS.CHANGE_QUANTITY, productId, quantity });
   }, []);
-
 
   const emptyCart = useCallback(() => {
     dispatch({ type: CART_ACTIONS.EMPTY_CART });
   }, []);
 
-
   const toggleItemSelection = useCallback((productId) => {
     dispatch({ type: CART_ACTIONS.TOGGLE_ITEM_SELECTION, productId });
   }, []);
-
 
   const selectAllItems = useCallback(() => {
     dispatch({ type: CART_ACTIONS.SELECT_ALL_ITEMS });
   }, []);
 
- 
   const unselectAllItems = useCallback(() => {
     dispatch({ type: CART_ACTIONS.UNSELECT_ALL_ITEMS });
   }, []);
 
- 
   const totalItems = cartState.products.reduce((total, product) => total + product.quantity, 0);
-  
   const totalCost = cartState.products.reduce((total, product) => {
     return total + (product.price * product.quantity);
   }, 0);
-
   const selectedItemsCost = cartState.products
     .filter(product => cartState.selectedItems.includes(product.id))
     .reduce((total, product) => total + (product.price * product.quantity), 0);
-
   const selectedItemsCount = cartState.selectedItems.length;
 
   const isProductInCart = (productId) => {
@@ -197,19 +167,14 @@ export const ShoppingCartProvider = ({ children }) => {
   };
 
   const value = {
-  
     items: cartState.products,
     selectedItems: cartState.selectedItems,
     lastUpdated: cartState.lastUpdated,
-    
- 
     totalItems,
     totalCost,
     selectedItemsCost,
     selectedItemsCount,
     isAllSelected: cartState.products.length > 0 && cartState.selectedItems.length === cartState.products.length,
-    
-
     addToCart: addProduct,
     removeFromCart: deleteProduct,
     updateQuantity: changeProductQuantity,
@@ -219,8 +184,6 @@ export const ShoppingCartProvider = ({ children }) => {
     unselectAllItems,
     isProductInCart,
     getProductQuantity,
-    
-
     getTotalItems: () => totalItems,
     getTotalPrice: () => totalCost
   };
@@ -232,21 +195,17 @@ export const ShoppingCartProvider = ({ children }) => {
   );
 };
 
-
 export const useShoppingCart = () => {
   const context = useContext(ShoppingCartContext);
-  
   if (!context) {
     throw new Error('useShoppingCart должен использоваться внутри ShoppingCartProvider');
   }
-  
   return context;
 };
 
-
+// Алиасы
 export const CartProvider = ShoppingCartProvider;
 export const useCart = useShoppingCart;
-
 
 export const useCartItem = (productId) => {
   const { 
